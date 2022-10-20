@@ -46,7 +46,7 @@ class Chordino:
 
     :param use_nnls: Use approximate transcription (NNLS)
     :param roll_on: Spectral roll-on (range: 0 - 5)
-    :param tuning_mode: Tuning mode
+    :param local_tunning: Tuning mode (Local or Global)
     :param spectral_whitening: Spectral whitening (range: 0 - 1)
     :param spectral_shape: Spectral shape (range: 0.5 - 0.9)
     :param boost_n_likelihood: Boost likelihood of the N (no chord) label
@@ -56,16 +56,18 @@ class Chordino:
 
     def __init__(self,
                  use_nnls: bool = True,
+                 use_hart_notation: bool = False,
                  roll_on: float = 1,
-                 tuning_mode: TuningMode = TuningMode.GLOBAL,
+                 local_tunning: bool = False,
                  spectral_whitening: float = 1,
                  spectral_shape=0.7,
                  boost_n_likelihood: float = 0.1,
                  **kwargs):
         self._params = {
             'useNNLS': int(use_nnls),
+            'usehartesyntax': int(use_hart_notation),
             'rollon': roll_on,
-            'tuningmode': tuning_mode.value,
+            'tuningmode': int(local_tunning),
             'whitening': spectral_whitening,
             's': spectral_shape,
             'boostn': boost_n_likelihood
@@ -87,11 +89,11 @@ class Chordino:
         logger.info(
             'Submitting {} to Chordino for chord extraction.'.format(file))
 
-        chords = vamp.collect(
+        result = vamp.collect(
             data, rate, 'nnls-chroma:chordino', parameters=self._params)
         logger.info('Chord extraction for {} complete.'.format(file))
 
         return [
             ChordEntry(chord=entry['label'], timestamp=entry['timestamp'])
-            for entry in chords['list']
+            for entry in result['list']
         ]
